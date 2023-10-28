@@ -6,6 +6,8 @@ media/
 res/
 logs/
 .vscode/
+content/
+content/*
 save/
 data/
 wandb/

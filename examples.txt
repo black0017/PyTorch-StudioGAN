@@ -1,0 +1,15 @@
+
+CUDA_VISIBLE_DEVICES=0 
+
+python src/main.py --load_best \
+-sf -sf_num 100 -metrics none -cfg /home/adaloglo/PyTorch-StudioGAN/src/configs/CIFAR10/BigGAN.yaml \
+-data data/cifar10 -ckpt ./content/BigGAN -save ./content/BigGAN
+
+
+
+
+
+
+CUDA_VISIBLE_DEVICES=0 python src/main.py \
+-sf -metrics is fid prdc -cfg src/configs/CIFAR10/DCGAN.yaml \
+-data data/cifar10 -ckpt /content/DCGAN -save /content/results 

@@ -459,7 +459,7 @@ def load_worker(local_rank, cfgs, gpus_per_node, run_name, hdf5_path):
     if cfgs.RUN.save_fake_images:
         if global_rank == 0:
             print(""), logger.info("-" * 80)
-        worker.save_fake_images(num_images=cfgs.RUN.save_fake_images_num)
+        worker.save_fake_images(num_images=cfgs.RUN.save_fake_images_num, seed=cfgs.RUN.seed)
 
     if cfgs.RUN.vis_fake_images:
         if global_rank == 0:

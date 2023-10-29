@@ -481,7 +481,10 @@ def plot_tsne_scatter_plot(df, tsne_results, flag, directory, logger, logging=Tr
 
 def save_images_png(data_loader, generator, discriminator, is_generate, num_images, y_sampler, batch_size, z_prior,
                     truncation_factor, z_dim, num_classes, LOSS, OPTIMIZATION, RUN, MODEL, is_stylegan, generator_mapping,
-                    generator_synthesis, directory, device):
+                    generator_synthesis, directory, device, seed=None):
+    imgs_per_folder = 1000
+    base_dir = directory
+    current_folder = 0
     num_batches = math.ceil(float(num_images) / float(batch_size))
     if RUN.distributed_data_parallel: num_batches = num_batches//OPTIMIZATION.world_size + 1
     if is_generate:
@@ -492,12 +495,19 @@ def save_images_png(data_loader, generator, discriminator, is_generate, num_imag
 
     print("Save {num_images} {image_type} images in png format.".format(num_images=num_images, image_type=image_type))
 
-    directory = join(directory, image_type)
+    if seed is not None:
+        directory = join(base_dir, f'{0:07d}')
+    else:
+        directory = join(base_dir, image_type)
+    
     if exists(directory):
         shutil.rmtree(directory)
-    os.makedirs(directory)
-    for f in range(num_classes):
-        os.makedirs(join(directory, str(f)))
+    
+    os.makedirs(directory,exist_ok=True)
+    
+    if seed is None:
+        for f in range(num_classes):
+            os.makedirs(join(directory, str(f)))
 
     with torch.no_grad() if not LOSS.apply_lo else dummy_context_mgr() as mpc:
         for i in tqdm(range(0, num_batches), disable=False):
@@ -529,11 +539,27 @@ def save_images_png(data_loader, generator, discriminator, is_generate, num_imag
                     images, labels = next(data_iter)
                 except StopIteration:
                     break
-
+            
             for idx, img in enumerate(images.detach()):
-                if batch_size * i + idx < num_images:
-                    save_image(((img+1)/2).clamp(0.0, 1.0),
-                               join(directory, str(labels[idx].item()), "{idx}.png".format(idx=batch_size * i + idx)))
+                global_index = batch_size * i + idx
+                if global_index < num_images:
+                    # Determine path to save image
+                    if seed is not None:
+                        img_path = join(directory,  f'{global_index:07d}.png')
+                    else:
+                        img_path = join(directory, str(labels[idx].item()), "{idx}.png".format(idx=batch_size * i + idx))
+                    
+                    # Determine folder to save image
+                    if seed is not None:
+                        if current_folder<imgs_per_folder:
+                            save_image(((img+1)/2).clamp(0.0, 1.0), img_path)
+                            current_folder+=1
+                        else:
+                            directory = join(base_dir, f'{global_index-global_index%1000:07d}')
+                            os.makedirs(directory,exist_ok=True)
+                            img_path = join(directory,  f'{global_index:07d}.png')
+                            save_image(((img+1)/2).clamp(0.0, 1.0), img_path)
+                            current_folder=1
                 else:
                     pass
 

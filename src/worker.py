@@ -1014,7 +1014,7 @@ class WORKER(object):
     # -----------------------------------------------------------------------------
     # save fake images to measure metrics for evaluation.
     # -----------------------------------------------------------------------------
-    def save_fake_images(self, num_images):
+    def save_fake_images(self, num_images, seed=None):
         if self.global_rank == 0:
             self.logger.info("save {num_images} generated images in png format.".format(num_images=self.num_eval[self.RUN.ref_dataset]))
         if self.gen_ctlr.standing_statistics:
@@ -1044,7 +1044,8 @@ class WORKER(object):
                                  generator_mapping=generator_mapping,
                                  generator_synthesis=generator_synthesis,
                                  directory=join(self.RUN.save_dir, "samples", self.run_name),
-                                 device=self.local_rank)
+                                 device=self.local_rank,
+                                 seed=seed)
 
         misc.make_GAN_trainable(self.Gen, self.Gen_ema, self.Dis)
 

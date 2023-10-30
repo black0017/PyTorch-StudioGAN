@@ -508,7 +508,7 @@ def save_images_png(data_loader, generator, discriminator, is_generate, num_imag
     if seed is None:
         for f in range(num_classes):
             os.makedirs(join(directory, str(f)))
-
+    labels_all = []
     with torch.no_grad() if not LOSS.apply_lo else dummy_context_mgr() as mpc:
         for i in tqdm(range(0, num_batches), disable=False):
             start = i * batch_size
@@ -534,6 +534,7 @@ def save_images_png(data_loader, generator, discriminator, is_generate, num_imag
                                                                  stylegan_update_emas=False,
                                                                  device=device,
                                                                  cal_trsp_cost=False)
+                labels_all.append(labels)
             else:
                 try:
                     images, labels = next(data_iter)
@@ -562,6 +563,9 @@ def save_images_png(data_loader, generator, discriminator, is_generate, num_imag
                             current_folder=1
                 else:
                     pass
+    if seed is not None:
+        label_tensor = torch.cat(labels_all, dim=0)[:num_images]
+        torch.save(label_tensor, join(base_dir, "labels.pt"))
 
     print("Finish saving png images to {directory}/*/*.png".format(directory=directory))
 

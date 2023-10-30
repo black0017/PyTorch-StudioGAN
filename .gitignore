@@ -15,3 +15,4 @@ test/
 *.csv
 *.npy
 *.sh
+*.ipynb
